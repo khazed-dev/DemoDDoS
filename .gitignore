@@ -1,0 +1,11 @@
+node_modules/
+apps/*/node_modules/
+.env
+.pm2/
+logs/
+*.log
+data/raw/*.jsonl
+data/raw/*.log
+data/summaries/*.generated.json
+coverage/
+

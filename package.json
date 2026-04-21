@@ -1,0 +1,29 @@
+{
+  "name": "ddos-lab",
+  "private": true,
+  "version": "1.0.0",
+  "workspaces": [
+    "apps/victim",
+    "apps/dashboard"
+  ],
+  "scripts": {
+    "dev:victim": "npm --workspace apps/victim run dev",
+    "dev:dashboard": "npm --workspace apps/dashboard run dev",
+    "start:victim": "npm --workspace apps/victim run start",
+    "start:dashboard": "npm --workspace apps/dashboard run start",
+    "parse:once": "node scripts/parse/build-summaries.js",
+    "parse:watch": "node scripts/parse/watch.js",
+    "start:pm2": "pm2 start infra/pm2/ecosystem.config.js",
+    "reload:pm2": "pm2 reload infra/pm2/ecosystem.config.js",
+    "stop:pm2": "pm2 delete ddos-lab-victim ddos-lab-dashboard ddos-lab-parser",
+    "check": "node scripts/parse/build-summaries.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "pm2": "^5.4.3"
+  },
+  "engines": {
+    "node": ">=18.18.0"
+  }
+}
+

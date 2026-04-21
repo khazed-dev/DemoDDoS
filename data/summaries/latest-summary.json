@@ -1,0 +1,90 @@
+{
+  "generatedAt": "2026-04-21T01:49:56.248Z",
+  "appStatus": "UP",
+  "totals": {
+    "requests": 11,
+    "errors": 0,
+    "blocked": 0,
+    "status429": 0,
+    "status5xx": 0,
+    "avgRequestTimeMs": 208.72
+  },
+  "topIps": [
+    {
+      "ip": "::ffff:127.0.0.1",
+      "count": 11
+    }
+  ],
+  "topEndpoints": [
+    {
+      "path": "/health",
+      "count": 5
+    },
+    {
+      "path": "/heavy",
+      "count": 3
+    },
+    {
+      "path": "/api/report",
+      "count": 3
+    }
+  ],
+  "timeline": [
+    {
+      "minute": "2026-04-21T01:48:00.000Z",
+      "requests": 3,
+      "errors": 0,
+      "blocked": 0,
+      "status5xx": 0,
+      "avgRequestTimeMs": 255.21
+    },
+    {
+      "minute": "2026-04-21T01:49:00.000Z",
+      "requests": 8,
+      "errors": 0,
+      "blocked": 0,
+      "status5xx": 0,
+      "avgRequestTimeMs": 191.29
+    }
+  ],
+  "snapshots": {
+    "beforeAttack": {
+      "label": "Before attack",
+      "requestsPerMinute": 3,
+      "errorRate": 0,
+      "avgRequestTimeMs": 255.21
+    },
+    "duringAttack": {
+      "label": "During attack",
+      "requestsPerMinute": 8,
+      "errorRate": 0,
+      "avgRequestTimeMs": 191.29
+    },
+    "afterRestart": {
+      "label": "After restart",
+      "requestsPerMinute": 8,
+      "errorRate": 0,
+      "avgRequestTimeMs": 191.29
+    }
+  },
+  "lastAttackSummary": {
+    "peakMinute": "2026-04-21T01:49:00.000Z",
+    "peakRequestsPerMinute": 8,
+    "peakErrorRate": 0,
+    "notes": "Traffic stayed within low to moderate volume during the parsed window."
+  },
+  "defense": {
+    "rateLimitEnabled": false,
+    "connLimitEnabled": false,
+    "emergencyModeEnabled": false,
+    "lastUpdatedAt": null,
+    "notes": "Default local placeholder until EC2 scripts update this file."
+  },
+  "sources": {
+    "nginxAccess": "D:\\KHA\\VKU\\Nam_4\\Ki_3\\SEC\\DemoDDoS\\data\\raw\\nginx-access.jsonl",
+    "nginxError": "D:\\KHA\\VKU\\Nam_4\\Ki_3\\SEC\\DemoDDoS\\data\\raw\\nginx-error.log",
+    "victimMetrics": "D:\\KHA\\VKU\\Nam_4\\Ki_3\\SEC\\DemoDDoS\\data\\raw\\victim-metrics.jsonl",
+    "opsEvents": "D:\\KHA\\VKU\\Nam_4\\Ki_3\\SEC\\DemoDDoS\\data\\raw\\ops-events.jsonl",
+    "defenseStatus": "D:\\KHA\\VKU\\Nam_4\\Ki_3\\SEC\\DemoDDoS\\data\\summaries\\defense-status.json"
+  }
+}

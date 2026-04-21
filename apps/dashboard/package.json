@@ -1,0 +1,15 @@
+{
+  "name": "dashboard-app",
+  "version": "1.0.0",
+  "private": true,
+  "main": "src/server.js",
+  "scripts": {
+    "dev": "node src/server.js",
+    "start": "node src/server.js"
+  },
+  "dependencies": {
+    "chart.js": "^4.4.3",
+    "express": "^4.19.2"
+  }
+}
+

@@ -1,0 +1,8 @@
+{
+  "rateLimitEnabled": false,
+  "connLimitEnabled": false,
+  "emergencyModeEnabled": false,
+  "lastUpdatedAt": null,
+  "notes": "Default local placeholder until EC2 scripts update this file."
+}
+
