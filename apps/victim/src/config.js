@@ -15,7 +15,7 @@ function resolveFromRoot(targetPath, fallbackPath) {
 const config = {
   rootDir,
   port: Number(process.env.VICTIM_PORT || 3001),
-  publicName: process.env.VICTIM_PUBLIC_NAME || "Victim Website",
+  publicName: process.env.VICTIM_PUBLIC_NAME || "SafeWave Academy",
   heavyDefaultMs: Number(process.env.VICTIM_HEAVY_DEFAULT_MS || 80),
   heavyMaxMs: Number(process.env.VICTIM_HEAVY_MAX_MS || 220),
   reportDelayMs: Number(process.env.VICTIM_REPORT_DELAY_MS || 650),
@@ -28,4 +28,3 @@ const config = {
 fs.mkdirSync(config.logDir, { recursive: true });
 
 module.exports = config;
-
