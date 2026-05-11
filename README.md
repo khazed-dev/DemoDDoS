@@ -186,6 +186,7 @@ The dashboard reads these files so it can still show the last attack summary aft
 
 Available scripts:
 
+- `scripts/defense/enable-protection.sh`
 - `scripts/defense/enable-rate-limit.sh`
 - `scripts/defense/disable-rate-limit.sh`
 - `scripts/defense/enable-conn-limit.sh`
@@ -196,9 +197,7 @@ Available scripts:
 Example:
 
 ```bash
-./scripts/defense/enable-rate-limit.sh
-./scripts/defense/enable-conn-limit.sh
-./scripts/defense/enable-emergency-mode.sh
+./scripts/defense/enable-protection.sh
 ```
 
 Each script:
@@ -253,9 +252,9 @@ sudo tail -f /var/log/nginx/ddos-lab-error.log
 2. Run `npm run parse:once` for a baseline summary.
 3. Start `light-test.sh`, then escalate to `medium-test.sh` or `http-flood.sh`.
 4. Show slower responses, timeouts, or 5xx activity.
-5. Enable rate limiting and connection limiting.
+5. Enable the combined protection script for rate limiting and connection limiting.
 6. Show `429` and blocked-request counts growing.
-7. Enable emergency mode if you want to demonstrate graceful degradation.
+7. Enable emergency mode only if you still want to demonstrate graceful degradation separately.
 8. Restart only the victim app.
 9. Show the dashboard still rendering historical summaries.
 

@@ -1,6 +1,6 @@
 const { buildSummary } = require("./build-summaries");
 
-const intervalMs = Number(process.env.PARSER_INTERVAL_MS || 15000);
+const intervalMs = Number(process.env.PARSER_INTERVAL_MS || 1000);
 
 function tick() {
   try {

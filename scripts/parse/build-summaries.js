@@ -70,6 +70,21 @@ function toMinuteKey(timestamp) {
   return date.toISOString();
 }
 
+function toSecondKey(timestamp) {
+  const date = new Date(timestamp);
+  if (Number.isNaN(date.getTime())) {
+    return null;
+  }
+
+  date.setMilliseconds(0);
+  return date.toISOString();
+}
+
+function toValidDate(timestamp) {
+  const date = new Date(timestamp);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
 function normalizeRequest(entry) {
   if (!entry) {
     return null;
@@ -182,6 +197,153 @@ function buildTimeline(requests) {
     }));
 }
 
+function getAnchorDate(requests) {
+  const now = new Date();
+  const latestRequest = requests.reduce((latest, request) => {
+    const current = toValidDate(request.ts);
+    if (!current) {
+      return latest;
+    }
+
+    if (!latest || current > latest) {
+      return current;
+    }
+
+    return latest;
+  }, null);
+
+  if (!latestRequest) {
+    return now;
+  }
+
+  return latestRequest > now ? latestRequest : now;
+}
+
+function buildRecentSeries(requests, windowSeconds = 60) {
+  const anchor = getAnchorDate(requests);
+  const anchorSecond = new Date(anchor);
+  anchorSecond.setMilliseconds(0);
+
+  const start = new Date(anchorSecond.getTime() - (windowSeconds - 1) * 1000);
+  const buckets = new Map();
+
+  for (let offset = 0; offset < windowSeconds; offset += 1) {
+    const point = new Date(start.getTime() + offset * 1000).toISOString();
+    buckets.set(point, {
+      second: point,
+      requests: 0,
+      blocked: 0,
+      errors: 0
+    });
+  }
+
+  for (const request of requests) {
+    const second = toSecondKey(request.ts);
+    if (!second || !buckets.has(second)) {
+      continue;
+    }
+
+    const bucket = buckets.get(second);
+    bucket.requests += 1;
+
+    if (request.status >= 400) {
+      bucket.errors += 1;
+    }
+
+    if (request.status === 429) {
+      bucket.blocked += 1;
+    }
+  }
+
+  return [...buckets.values()];
+}
+
+function buildLiveIpActivity(requests, windowSeconds = 60) {
+  const anchor = getAnchorDate(requests);
+  const startMs = anchor.getTime() - windowSeconds * 1000;
+  const recentRequests = requests.filter((request) => {
+    const ts = toValidDate(request.ts);
+    return ts && ts.getTime() >= startMs;
+  });
+
+  const byIp = new Map();
+
+  for (const request of recentRequests) {
+    const ip = request.ip || "unknown";
+
+    if (!byIp.has(ip)) {
+      byIp.set(ip, {
+        ip,
+        requests: 0,
+        blocked: 0,
+        errors: 0,
+        lastSeen: null,
+        topPath: "/",
+        pathCounts: new Map()
+      });
+    }
+
+    const entry = byIp.get(ip);
+    entry.requests += 1;
+    entry.lastSeen = request.ts || entry.lastSeen;
+
+    if (request.status >= 400) {
+      entry.errors += 1;
+    }
+
+    if (request.status === 429) {
+      entry.blocked += 1;
+    }
+
+    const route = request.path || "/";
+    entry.pathCounts.set(route, (entry.pathCounts.get(route) || 0) + 1);
+  }
+
+  const serialized = [...byIp.values()].map((entry) => {
+    const hottestPath = [...entry.pathCounts.entries()].sort((left, right) => right[1] - left[1])[0];
+    const blockRate = entry.requests === 0 ? 0 : Number(((entry.blocked / entry.requests) * 100).toFixed(1));
+    let state = "Watching";
+
+    if (entry.blocked > 0) {
+      state = "Blocked";
+    } else if (entry.requests >= 25) {
+      state = "Flooding";
+    } else if (entry.requests <= 3) {
+      state = "Low";
+    }
+
+    return {
+      ip: entry.ip,
+      requests: entry.requests,
+      blocked: entry.blocked,
+      errors: entry.errors,
+      lastSeen: entry.lastSeen,
+      hottestPath: hottestPath ? hottestPath[0] : entry.topPath,
+      blockRate,
+      state
+    };
+  });
+
+  const sortByPressure = (left, right) =>
+    right.requests - left.requests || right.blocked - left.blocked || String(right.lastSeen || "").localeCompare(String(left.lastSeen || ""));
+
+  return {
+    windowSeconds,
+    anchorTs: anchor.toISOString(),
+    recentTotals: {
+      requests: recentRequests.length,
+      blocked: recentRequests.filter((request) => request.status === 429).length,
+      errors: recentRequests.filter((request) => request.status >= 400).length,
+      activeIps: byIp.size
+    },
+    hotIps: serialized.sort(sortByPressure).slice(0, 8),
+    blockedIps: serialized
+      .filter((entry) => entry.blocked > 0)
+      .sort((left, right) => right.blocked - left.blocked || right.requests - left.requests)
+      .slice(0, 8)
+  };
+}
+
 function pickSnapshots(timeline) {
   if (timeline.length === 0) {
     return {
@@ -237,7 +399,7 @@ function extractErrorEvents(lines) {
   }));
 }
 
-function synthesizeEvents(timeline, totals, defense, opsEvents, errorLines) {
+function synthesizeEvents(timeline, totals, defense, opsEvents, errorLines, liveView) {
   const events = [...opsEvents];
 
   if (timeline.length > 0) {
@@ -265,10 +427,19 @@ function synthesizeEvents(timeline, totals, defense, opsEvents, errorLines) {
 
   if (totals.status429 > 0) {
     events.push({
-      ts: new Date().toISOString(),
+      ts: liveView.blockedIps[0]?.lastSeen || liveView.anchorTs || new Date().toISOString(),
       level: "info",
       type: "rate_limit_observed",
       message: `Observed ${totals.status429} HTTP 429 responses in parsed logs.`
+    });
+  }
+
+  if (liveView.hotIps[0] && liveView.hotIps[0].requests >= 20) {
+    events.push({
+      ts: liveView.hotIps[0].lastSeen || liveView.anchorTs || new Date().toISOString(),
+      level: "warning",
+      type: "hot_source_detected",
+      message: `Source ${liveView.hotIps[0].ip} generated ${liveView.hotIps[0].requests} requests in the last ${liveView.windowSeconds}s.`
     });
   }
 
@@ -323,6 +494,10 @@ function buildSummary() {
   const topIps = getTopEntries(countBy(requests, (request) => request.ip || "unknown"), "ip");
   const topEndpoints = getTopEntries(countBy(requests, (request) => request.path || "/"), "path");
   const timeline = buildTimeline(requests);
+  const liveView = {
+    series: buildRecentSeries(requests, 60),
+    ...buildLiveIpActivity(requests, 60)
+  };
   const totalDuration = requests.reduce((sum, request) => sum + Number(request.durationMs || 0), 0);
 
   const totals = {
@@ -359,13 +534,14 @@ function buildSummary() {
     topIps,
     topEndpoints,
     timeline,
+    live: liveView,
     snapshots: pickSnapshots(timeline),
     lastAttackSummary,
     defense,
     sources: sourceFiles
   };
 
-  const events = synthesizeEvents(timeline, totals, defense, opsEvents, errorLines);
+  const events = synthesizeEvents(timeline, totals, defense, opsEvents, errorLines, liveView);
 
   writeJson(path.join(summaryDir, "latest-summary.json"), summary);
   writeJson(path.join(summaryDir, "top-ips.json"), topIps);
@@ -388,4 +564,3 @@ if (require.main === module) {
 module.exports = {
   buildSummary
 };
-

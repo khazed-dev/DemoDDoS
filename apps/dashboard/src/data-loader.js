@@ -89,6 +89,19 @@ async function loadDashboardState() {
     topIps: [],
     topEndpoints: [],
     timeline: [],
+    live: {
+      windowSeconds: 60,
+      anchorTs: null,
+      recentTotals: {
+        requests: 0,
+        blocked: 0,
+        errors: 0,
+        activeIps: 0
+      },
+      series: [],
+      hotIps: [],
+      blockedIps: []
+    },
     snapshots: {
       beforeAttack: { label: "Before attack", requestsPerMinute: 0, errorRate: 0, avgRequestTimeMs: 0 },
       duringAttack: { label: "During attack", requestsPerMinute: 0, errorRate: 0, avgRequestTimeMs: 0 },
@@ -117,4 +130,3 @@ async function loadDashboardState() {
 module.exports = {
   loadDashboardState
 };
-

@@ -28,6 +28,16 @@ app.get("/dashboard/api/summary", async (req, res, next) => {
   }
 });
 
+app.get("/dashboard/api/state", async (req, res, next) => {
+  try {
+    const state = await loadDashboardState();
+    res.set("Cache-Control", "no-store");
+    res.json(state);
+  } catch (error) {
+    next(error);
+  }
+});
+
 app.get("/dashboard/api/events", async (req, res, next) => {
   try {
     const state = await loadDashboardState();

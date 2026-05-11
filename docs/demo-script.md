@@ -24,16 +24,15 @@
 
 ## 4. Enable defense
 
-1. Run `scripts/defense/enable-rate-limit.sh`.
-2. Optionally run `scripts/defense/enable-conn-limit.sh`.
-3. Refresh the dashboard and show:
+1. Run `scripts/defense/enable-protection.sh`.
+2. Refresh the dashboard and show:
    - `429` counts increasing
    - blocked requests increasing
    - defense status switches to `ON`
 
 ## 5. Emergency fallback
 
-1. If the victim route is still unstable, run `scripts/defense/enable-emergency-mode.sh`.
+1. If you still want a separate maintenance fallback demo, run `scripts/defense/enable-emergency-mode.sh`.
 2. Show that `/` returns the degraded static fallback page.
 3. Show that `/dashboard` still works.
 
